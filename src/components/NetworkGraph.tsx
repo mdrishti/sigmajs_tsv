@@ -241,13 +241,6 @@ const visualizeGraph = (graph: Graph, headers: string[]) => {
   // Enable enhanced dragging behavior
   enableEnhancedDragging(graph, renderer);
 
-  renderer.on("doubleClickNode", ({ node }) => {
-    const fullUrl = graph.getNodeAttribute(node, "fullUrl");
-    if (fullUrl) {
-      window.open(fullUrl, "_blank");
-    }
-  });
-
   return renderer;
 };
 
@@ -304,13 +297,24 @@ const enableEnhancedDragging = (graph: Graph, renderer: Sigma) => {
     }
   });
 
-  // On node click, open associated URL if not dragging
-  renderer.on("clickNode", ({ node }) => {
+
+  // Clean up existing double-click listeners before adding a new one
+  renderer.getGraph().removeAllListeners("doubleClickNode");
+
+  // Add the double-click listener for nodes
+  renderer.on("doubleClickNode", ({ node }) => {
+    const fullUrl = graph.getNodeAttribute(node, "fullUrl");
+    if (fullUrl) {
+      window.open(fullUrl, "_blank"); // Open the full URL in a new tab
+    }
+  });
+
+  /*renderer.on("clickNode", ({ node }) => {
     if (!graph.getNodeAttribute(node, "hidden") && allowClick) {
       const pageURL = graph.getNodeAttribute(node, "pageURL");
       if (pageURL) window.open(pageURL, "_blank");
     }
-  });
+  });*/
 };
 
 const NetworkGraph: React.FC = () => {
