@@ -24,36 +24,74 @@ const parseTSV = (tsvData: string): { rows: TSVRow[]; headers: string[] } => {
   return { rows: parsedRows, headers };
 };
 
-const createGraphFromTSV = (data: TSVRow[], headers: string[], selectedNodeTypes: string[]): Graph => {
+
+
+const createGraphFromTSV = (
+  data: TSVRow[],
+  headers: string[],
+  selectedNodeTypes: string[]
+): Graph => {
   const graph = new Graph();
   const nodeDegrees: Record<string, number> = {};
 
   data.forEach((row) => {
-    const nodesInRow = headers.map((col) => row[col]);
+    // Extract nodes for the current row
+    const nodesInRow = headers.map((col) => {
+      const rawValue = row[col];
+      return rawValue ? rawValue.replace(/^<|>$/g, "") : null; // Remove angle brackets, handle nulls
+    });
 
+    // Add nodes
     nodesInRow.forEach((node, index) => {
+      if (!node) return; // Skip empty nodes
       const nodeType = headers[index];
+
       if (selectedNodeTypes.includes(nodeType)) {
         if (!graph.hasNode(node)) {
-          graph.addNode(node, {
-            label: `${nodeType}: ${node}`,
-            nodeType: nodeType,
-          });
-          nodeDegrees[node] = 0; // Initialize degree
+
+	let label;
+
+          // Check if the node contains XMLSchema
+          if (node.includes("XMLSchema")) {
+            // Extract the content between double quotes
+            const match = node.match(/"([^"]+)"/);
+            label = match ? match[1] : node; // Use matched content or fallback to the raw value
+             graph.addNode(node, {
+              label: `${label}`, // Node label with its type
+              nodeType: nodeType, // Type based on column
+             });
+          } else {
+            // Extract the label from the URL (content after the last "/")
+            label = node.split("/").pop() || node;
+            graph.addNode(node, {
+             label: `${label}`, // Node label with its type
+             fullUrl: node, // Store the full URL for double-click functionality
+             nodeType: nodeType, // Type based on column
+            });
+          }
+
+
+          // Initialize degree tracking
+          nodeDegrees[node] = 0;
         }
       }
     });
 
+    // Add edges
     for (let i = 0; i < nodesInRow.length; i++) {
       for (let j = i + 1; j < nodesInRow.length; j++) {
         const source = nodesInRow[i];
         const target = nodesInRow[j];
-        if (
-          graph.hasNode(source) &&
-          graph.hasNode(target) &&
-          !graph.hasEdge(source, target)
-        ) {
-          graph.addEdge(source, target, { weight: 1 });
+
+        if (source && target && source !== target) {
+          // Add edge if both nodes exist and no duplicate edge exists
+          if (graph.hasNode(source) && graph.hasNode(target) && !graph.hasEdge(source, target)) {
+            graph.addEdge(source, target, { weight: 1 });
+
+            // Increment degrees for source and target
+            nodeDegrees[source]++;
+            nodeDegrees[target]++;
+          }
         }
       }
     }
@@ -61,12 +99,6 @@ const createGraphFromTSV = (data: TSVRow[], headers: string[], selectedNodeTypes
 
   return graph;
 };
-
-
-
-
-
-
 
 
 
@@ -208,6 +240,13 @@ const visualizeGraph = (graph: Graph, headers: string[]) => {
 
   // Enable enhanced dragging behavior
   enableEnhancedDragging(graph, renderer);
+
+  renderer.on("doubleClickNode", ({ node }) => {
+    const fullUrl = graph.getNodeAttribute(node, "fullUrl");
+    if (fullUrl) {
+      window.open(fullUrl, "_blank");
+    }
+  });
 
   return renderer;
 };
