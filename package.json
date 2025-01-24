@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "file-saver": "^2.0.5",
     "graphology": "^0.25.4",
     "graphology-components": "^1.5.4",
     "graphology-layout": "^0.6.1",
