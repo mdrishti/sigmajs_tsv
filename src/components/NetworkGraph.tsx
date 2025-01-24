@@ -7,6 +7,8 @@ import FA2Layout from "graphology-layout-forceatlas2/worker";
 import { circular } from "graphology-layout";
 import { PlainObject } from "sigma/types";
 import Sigma from "sigma";
+import SaveSnapshot from "./SaveSnapshot";
+
 
 type TSVRow = Record<string, string>;
 
@@ -399,7 +401,8 @@ const NetworkGraph: React.FC = () => {
         )}
       </div>
       <div id="sigma-container" style={{ width: "100vw", height: "100vh", position: "fixed", top: 0, left: 0, backgroundColor: "#f0f0f0" }}></div>
-      
+     {renderer && <SaveSnapshot renderer={renderer} />}
+
       <div id="buttons" style={{ position: "absolute", right: '1em', top: '1em', display: 'flex' }}>
         <button id="random" style={{ marginRight: '1em', display: 'inline-block', textAlign: 'center', background: 'white', outline: 'none', border: '1px solid dimgrey', borderRadius: '2px', cursor: 'pointer' }}>
           <span style={{ height: '100%', display: 'flex', alignItems: 'center' }}><img src="/GiPerspectiveDiceSixFaces.svg" alt="Random" style={{ height: '2em' }} />random</span>
