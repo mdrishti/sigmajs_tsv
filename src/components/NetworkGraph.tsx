@@ -358,11 +358,25 @@ const NetworkGraph: React.FC = () => {
   const handleNodeTypeSelection = () => {
     if (!fileContent || selectedNodeTypes.length === 0) return;
 
+
     const { rows } = parseTSV(fileContent);
+    // Clear the existing graph state
+    if (graph) {
+    	graph.clear(); // Removes all nodes and edges
+    }
     const newGraph = createGraphFromTSV(rows, headers, selectedNodeTypes);
 
     setGraph(newGraph);
+
+    // If a renderer exists, kill it to remove the previous visualization
+    if (renderer) {
+     renderer.kill();
+     setRenderer(null);
+    }
   };
+
+
+
 
   useEffect(() => {
     if (!graph) return;
